@@ -34,6 +34,11 @@ main {
 .status-active {
   color: var(--framer-color-text, #333);
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
 }
 
 .clipboard-field {

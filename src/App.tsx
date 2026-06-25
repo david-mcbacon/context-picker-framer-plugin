@@ -24,7 +24,7 @@ interface HistoryEntry {
   timestamp: number;
 }
 
-const MAX_HISTORY = 5;
+const MAX_HISTORY = 10;
 const STORAGE_KEY = "contextPickerHistory";
 
 function getNodeName(node: CanvasNode) {
@@ -178,8 +178,7 @@ export function App() {
     <main>
       <div className="instructions">
         <p>
-          Select one or more nodes on canvas to copy their ID + name and paste to your
-          external agent.
+          Select layer to copy its ID + name and paste to your external agent.
         </p>
       </div>
 
@@ -187,9 +186,9 @@ export function App() {
         {selection.length === 0 ? (
           <span className="status-empty">Nothing selected</span>
         ) : (
-          <span className="status-active">
-            {copyState === "copied" ? "Copied" : "Ready"} {selection.length}{" "}
-            {selection.length === 1 ? "node" : "nodes"}
+          <span className="status-active" title={getNodeName(selection[0])}>
+            {copyState === "copied" ? "Copied:" : "Ready:"}{" "}
+            {getNodeName(selection[0])}
           </span>
         )}
       </div>
@@ -203,7 +202,7 @@ export function App() {
       />
 
       <div className="history">
-        <div className="history-header">Recent</div>
+        <div className="history-header">Recent selections</div>
         {history.length === 0 ? (
           <div className="history-empty">Selections will show up here</div>
         ) : (
