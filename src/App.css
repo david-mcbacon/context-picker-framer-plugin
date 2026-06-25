@@ -165,6 +165,7 @@ main {
   background: var(--framer-color-bg-secondary, #f5f5f5);
   cursor: pointer;
   transition: background-color 0.15s ease;
+  gap: 4px;
 }
 
 .history-item:hover,
