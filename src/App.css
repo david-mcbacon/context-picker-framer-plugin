@@ -36,6 +36,16 @@ main {
   font-weight: 600;
 }
 
+.clipboard-field {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .history {
   display: flex;
   flex-direction: column;
