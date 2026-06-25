@@ -13,14 +13,21 @@ export function App() {
     copyState,
     lastCopied,
     justCopiedId,
+    isSelectModeActive,
     clipboardFieldRef,
+    handleToggleSelectMode,
     handleCopyHistoryItem,
   } = useContextPicker();
 
   return (
     <main>
       <Instructions />
-      <SelectionStatus lastCopied={lastCopied} copyState={copyState} />
+      <SelectionStatus
+        lastCopied={lastCopied}
+        copyState={copyState}
+        isSelectModeActive={isSelectModeActive}
+        onToggleSelectMode={handleToggleSelectMode}
+      />
       <ClipboardField fieldRef={clipboardFieldRef} />
       <HistoryPanel
         history={history}

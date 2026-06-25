@@ -69,11 +69,20 @@ main {
 .status {
   display: flex;
   align-items: center;
+  gap: 4px;
   height: 30px;
-  padding: 0 6px;
+  padding: 0 2px 0 6px;
+  min-width: 0;
   border-radius: 8px;
   border: 1px dashed var(--framer-color-text-tertiary, #e0e0e0);
   font-size: 11px;
+}
+
+.status-main {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
 }
 
 .status-empty {
@@ -114,6 +123,58 @@ main {
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+}
+
+.select-mode-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: -1px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--framer-color-text-secondary, #666);
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.select-mode-button,
+.select-mode-button:hover,
+.select-mode-button:focus,
+.select-mode-button:focus-visible,
+.select-mode-button:active {
+  border-color: transparent !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.select-mode-button:hover {
+  color: var(--framer-color-text, #333);
+}
+
+.select-mode-button--active {
+  color: #FA4624;
+}
+
+.select-mode-button--active:hover,
+.select-mode-button--active:focus-visible {
+  color: #FA4624;
+}
+
+.select-mode-button svg {
+  display: block;
+  pointer-events: none;
 }
 
 .clipboard-field {
@@ -229,6 +290,10 @@ main {
   .history-icon-layer {
     transition: none;
     transform: none;
+  }
+
+  .select-mode-button {
+    transition: none;
   }
 
   .history-icon-layer--visible {

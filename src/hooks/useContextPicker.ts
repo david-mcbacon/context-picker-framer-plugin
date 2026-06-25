@@ -19,6 +19,7 @@ export function useContextPicker() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [justCopiedId, setJustCopiedId] = useState<string | null>(null);
+  const [isSelectModeActive, setIsSelectModeActive] = useState(false);
   const [copyState, setCopyState] = useState<CopyState>("empty");
   const [lastCopied, setLastCopied] = useState<Pick<
     HistoryEntry,
@@ -69,6 +70,11 @@ export function useContextPicker() {
   }, [lastCopied]);
 
   useEffect(() => {
+    if (!isSelectModeActive) {
+      lastSelectionKeyRef.current = "";
+      return;
+    }
+
     if (selection.length === 0) {
       lastSelectionKeyRef.current = "";
       return;
@@ -121,7 +127,11 @@ export function useContextPicker() {
     setHistory((prev) => {
       return mergeHistory(entries.reverse(), prev);
     });
-  }, [selection, canvasRoot]);
+  }, [selection, canvasRoot, isSelectModeActive]);
+
+  function handleToggleSelectMode() {
+    setIsSelectModeActive((isActive) => !isActive);
+  }
 
   async function handleCopyHistoryItem(entry: HistoryEntry) {
     const json = JSON.stringify({
@@ -163,7 +173,9 @@ export function useContextPicker() {
     copyState,
     lastCopied,
     justCopiedId,
+    isSelectModeActive,
     clipboardFieldRef,
+    handleToggleSelectMode,
     handleCopyHistoryItem,
   };
 }
