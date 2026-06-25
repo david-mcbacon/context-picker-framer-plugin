@@ -5,17 +5,19 @@ import { MAX_HISTORY, STATUS_CLEAR_MS, STORAGE_KEY } from "../lib/constants";
 import { getNodeName } from "../lib/node";
 import { formatSelectionAsJSON } from "../lib/selection";
 import type { CopyState, HistoryEntry } from "../lib/types";
+import { useCanvasRoot } from "./useCanvasRoot";
 import { useSelection } from "./useSelection";
 
 export function useContextPicker() {
   const selection = useSelection();
+  const canvasRoot = useCanvasRoot();
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [justCopiedId, setJustCopiedId] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<CopyState>("empty");
   const [lastCopied, setLastCopied] = useState<Pick<
     HistoryEntry,
-    "nodeId" | "nodeName"
+    "nodeId" | "nodeName" | "pagePath"
   > | null>(null);
   const lastSelectionKeyRef = useRef("");
   const clipboardFieldRef = useRef<HTMLTextAreaElement>(null);
@@ -65,7 +67,8 @@ export function useContextPicker() {
       return;
     }
 
-    const selectionKey = selection.map((n) => n.id).join(",");
+    const pagePath = canvasRoot && "path" in canvasRoot ? canvasRoot.path : null;
+    const selectionKey = `${selection.map((n) => n.id).join(",")}:${pagePath ?? ""}`;
     if (selectionKey === lastSelectionKeyRef.current) return;
     lastSelectionKeyRef.current = selectionKey;
 
@@ -73,9 +76,10 @@ export function useContextPicker() {
     setLastCopied({
       nodeId: firstNode.id,
       nodeName: getNodeName(firstNode),
+      pagePath,
     });
 
-    const json = formatSelectionAsJSON(selection);
+    const json = formatSelectionAsJSON(selection, pagePath);
     setCopyState("ready");
 
     requestAnimationFrame(() => {
@@ -89,21 +93,27 @@ export function useContextPicker() {
     const entries: HistoryEntry[] = selection.map((node) => ({
       nodeId: node.id,
       nodeName: getNodeName(node),
+      pagePath,
       timestamp: Date.now(),
     }));
 
     setHistory((prev) => {
       return mergeHistory(entries.reverse(), prev);
     });
-  }, [selection]);
+  }, [selection, canvasRoot]);
 
   async function handleCopyHistoryItem(entry: HistoryEntry) {
     const json = JSON.stringify({
       nodeId: entry.nodeId,
       nodeName: entry.nodeName,
+      ...(entry.pagePath ? { pagePath: entry.pagePath } : {}),
     });
     const didCopy = await copyTextToClipboard(json, clipboardFieldRef.current);
-    setLastCopied({ nodeId: entry.nodeId, nodeName: entry.nodeName });
+    setLastCopied({
+      nodeId: entry.nodeId,
+      nodeName: entry.nodeName,
+      pagePath: entry.pagePath,
+    });
     setCopyState(didCopy ? "copied" : "ready");
     setJustCopiedId(entry.nodeId);
     setTimeout(() => setJustCopiedId(null), 1200);

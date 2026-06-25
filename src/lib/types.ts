@@ -1,6 +1,7 @@
 export interface HistoryEntry {
   nodeId: string;
   nodeName: string;
+  pagePath?: string | null;
   timestamp: number;
 }
 

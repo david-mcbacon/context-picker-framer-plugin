@@ -14,7 +14,7 @@ main {
 
 .instructions p {
   margin: 0;
-  line-height: 1.25;
+  line-height: 1.35;
   color: var(--framer-color-text-secondary, #666);
   font-size: 12px;
 }
