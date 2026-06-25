@@ -1,10 +1,15 @@
-import { framer, useIsAllowedTo } from "@framer/plugin";
+import {
+  framer,
+  isDesignPageNode,
+  isWebPageNode,
+  useIsAllowedTo,
+} from "@framer/plugin";
 import { useEffect, useRef, useState } from "react";
 import { copyTextToClipboard } from "../lib/clipboard";
 import { MAX_HISTORY, STATUS_CLEAR_MS, STORAGE_KEY } from "../lib/constants";
 import { getNodeName } from "../lib/node";
 import { formatSelectionAsJSON } from "../lib/selection";
-import type { CopyState, HistoryEntry } from "../lib/types";
+import type { CopyState, HistoryEntry, PageInfo } from "../lib/types";
 import { useCanvasRoot } from "./useCanvasRoot";
 import { useSelection } from "./useSelection";
 
@@ -17,7 +22,7 @@ export function useContextPicker() {
   const [copyState, setCopyState] = useState<CopyState>("empty");
   const [lastCopied, setLastCopied] = useState<Pick<
     HistoryEntry,
-    "nodeId" | "nodeName" | "pagePath"
+    "nodeId" | "nodeName" | "pageType" | "pageId" | "pagePath"
   > | null>(null);
   const lastSelectionKeyRef = useRef("");
   const clipboardFieldRef = useRef<HTMLTextAreaElement>(null);
@@ -67,8 +72,13 @@ export function useContextPicker() {
       return;
     }
 
-    const pagePath = canvasRoot && "path" in canvasRoot ? canvasRoot.path : null;
-    const selectionKey = `${selection.map((n) => n.id).join(",")}:${pagePath ?? ""}`;
+    const pageInfo = getPageInfo(canvasRoot);
+    const selectionKey = [
+      selection.map((n) => n.id).join(","),
+      pageInfo?.pageType ?? "",
+      pageInfo?.pageId ?? "",
+      pageInfo?.pagePath ?? "",
+    ].join(":");
     if (selectionKey === lastSelectionKeyRef.current) return;
     lastSelectionKeyRef.current = selectionKey;
 
@@ -76,10 +86,10 @@ export function useContextPicker() {
     setLastCopied({
       nodeId: firstNode.id,
       nodeName: getNodeName(firstNode),
-      pagePath,
+      ...pageInfo,
     });
 
-    const json = formatSelectionAsJSON(selection, pagePath);
+    const json = formatSelectionAsJSON(selection, pageInfo);
     setCopyState("ready");
 
     requestAnimationFrame(() => {
@@ -93,7 +103,7 @@ export function useContextPicker() {
     const entries: HistoryEntry[] = selection.map((node) => ({
       nodeId: node.id,
       nodeName: getNodeName(node),
-      pagePath,
+      ...pageInfo,
       timestamp: Date.now(),
     }));
 
@@ -106,12 +116,16 @@ export function useContextPicker() {
     const json = JSON.stringify({
       nodeId: entry.nodeId,
       nodeName: entry.nodeName,
+      ...(entry.pageType ? { pageType: entry.pageType } : {}),
+      ...(entry.pageId ? { pageId: entry.pageId } : {}),
       ...(entry.pagePath ? { pagePath: entry.pagePath } : {}),
     });
     const didCopy = await copyTextToClipboard(json, clipboardFieldRef.current);
     setLastCopied({
       nodeId: entry.nodeId,
       nodeName: entry.nodeName,
+      pageType: entry.pageType,
+      pageId: entry.pageId,
       pagePath: entry.pagePath,
     });
     setCopyState(didCopy ? "copied" : "ready");
@@ -127,6 +141,29 @@ export function useContextPicker() {
     clipboardFieldRef,
     handleCopyHistoryItem,
   };
+}
+
+function getPageInfo(
+  canvasRoot: ReturnType<typeof useCanvasRoot>,
+): PageInfo | null {
+  if (canvasRoot === null) return null;
+
+  if (isWebPageNode(canvasRoot)) {
+    return {
+      pageType: "web page",
+      pageId: canvasRoot.id,
+      ...(canvasRoot.path ? { pagePath: canvasRoot.path } : {}),
+    };
+  }
+
+  if (isDesignPageNode(canvasRoot)) {
+    return {
+      pageType: "design page",
+      pageId: canvasRoot.id,
+    };
+  }
+
+  return null;
 }
 
 function mergeHistory(

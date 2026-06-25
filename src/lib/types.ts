@@ -1,7 +1,17 @@
+export type PageType = "web page" | "design page";
+
+export interface PageInfo {
+  pageType: PageType;
+  pageId: string;
+  pagePath?: string;
+}
+
 export interface HistoryEntry {
   nodeId: string;
   nodeName: string;
-  pagePath?: string | null;
+  pageType?: PageType;
+  pageId?: string;
+  pagePath?: string;
   timestamp: number;
 }
 
