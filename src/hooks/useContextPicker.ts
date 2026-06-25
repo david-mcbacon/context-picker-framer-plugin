@@ -1,5 +1,6 @@
 import {
   framer,
+  isComponentNode,
   isDesignPageNode,
   isWebPageNode,
   useIsAllowedTo,
@@ -9,7 +10,7 @@ import { copyTextToClipboard } from "../lib/clipboard";
 import { MAX_HISTORY, STATUS_CLEAR_MS, STORAGE_KEY } from "../lib/constants";
 import { getNodeName } from "../lib/node";
 import { formatSelectionAsJSON } from "../lib/selection";
-import type { CopyState, HistoryEntry, PageInfo } from "../lib/types";
+import type { CopyState, HistoryEntry, ScopeInfo } from "../lib/types";
 import { useCanvasRoot } from "./useCanvasRoot";
 import { useSelection } from "./useSelection";
 
@@ -22,7 +23,14 @@ export function useContextPicker() {
   const [copyState, setCopyState] = useState<CopyState>("empty");
   const [lastCopied, setLastCopied] = useState<Pick<
     HistoryEntry,
-    "nodeId" | "nodeName" | "pageType" | "pageId" | "pagePath"
+    | "nodeId"
+    | "nodeName"
+    | "scopeType"
+    | "scopeId"
+    | "scopeName"
+    | "urlPath"
+    | "isReplica"
+    | "originalNodeId"
   > | null>(null);
   const lastSelectionKeyRef = useRef("");
   const clipboardFieldRef = useRef<HTMLTextAreaElement>(null);
@@ -72,12 +80,13 @@ export function useContextPicker() {
       return;
     }
 
-    const pageInfo = getPageInfo(canvasRoot);
+    const scopeInfo = getScopeInfo(canvasRoot);
     const selectionKey = [
       selection.map((n) => n.id).join(","),
-      pageInfo?.pageType ?? "",
-      pageInfo?.pageId ?? "",
-      pageInfo?.pagePath ?? "",
+      scopeInfo?.scopeType ?? "",
+      scopeInfo?.scopeId ?? "",
+      scopeInfo?.scopeName ?? "",
+      scopeInfo?.urlPath ?? "",
     ].join(":");
     if (selectionKey === lastSelectionKeyRef.current) return;
     lastSelectionKeyRef.current = selectionKey;
@@ -86,10 +95,12 @@ export function useContextPicker() {
     setLastCopied({
       nodeId: firstNode.id,
       nodeName: getNodeName(firstNode),
-      ...pageInfo,
+      ...scopeInfo,
+      ...(firstNode.isReplica ? { isReplica: true } : {}),
+      ...(firstNode.originalId ? { originalNodeId: firstNode.originalId } : {}),
     });
 
-    const json = formatSelectionAsJSON(selection, pageInfo);
+    const json = formatSelectionAsJSON(selection, scopeInfo);
     setCopyState("ready");
 
     requestAnimationFrame(() => {
@@ -103,7 +114,9 @@ export function useContextPicker() {
     const entries: HistoryEntry[] = selection.map((node) => ({
       nodeId: node.id,
       nodeName: getNodeName(node),
-      ...pageInfo,
+      ...scopeInfo,
+      ...(node.isReplica ? { isReplica: true } : {}),
+      ...(node.originalId ? { originalNodeId: node.originalId } : {}),
       timestamp: Date.now(),
     }));
 
@@ -116,17 +129,25 @@ export function useContextPicker() {
     const json = JSON.stringify({
       nodeId: entry.nodeId,
       nodeName: entry.nodeName,
-      ...(entry.pageType ? { pageType: entry.pageType } : {}),
-      ...(entry.pageId ? { pageId: entry.pageId } : {}),
-      ...(entry.pagePath ? { pagePath: entry.pagePath } : {}),
+      ...(entry.scopeType ? { scopeType: entry.scopeType } : {}),
+      ...(entry.scopeId ? { scopeId: entry.scopeId } : {}),
+      ...(entry.scopeName ? { scopeName: entry.scopeName } : {}),
+      ...(entry.urlPath !== undefined ? { urlPath: entry.urlPath } : {}),
+      ...(entry.isReplica ? { isReplica: true } : {}),
+      ...(entry.originalNodeId
+        ? { originalNodeId: entry.originalNodeId }
+        : {}),
     });
     const didCopy = await copyTextToClipboard(json, clipboardFieldRef.current);
     setLastCopied({
       nodeId: entry.nodeId,
       nodeName: entry.nodeName,
-      pageType: entry.pageType,
-      pageId: entry.pageId,
-      pagePath: entry.pagePath,
+      scopeType: entry.scopeType,
+      scopeId: entry.scopeId,
+      scopeName: entry.scopeName,
+      urlPath: entry.urlPath,
+      isReplica: entry.isReplica,
+      originalNodeId: entry.originalNodeId,
     });
     setCopyState(didCopy ? "copied" : "ready");
     setJustCopiedId(entry.nodeId);
@@ -143,23 +164,36 @@ export function useContextPicker() {
   };
 }
 
-function getPageInfo(
+function getScopeInfo(
   canvasRoot: ReturnType<typeof useCanvasRoot>,
-): PageInfo | null {
+): ScopeInfo | null {
   if (canvasRoot === null) return null;
 
   if (isWebPageNode(canvasRoot)) {
     return {
-      pageType: "web page",
-      pageId: canvasRoot.id,
-      ...(canvasRoot.path ? { pagePath: canvasRoot.path } : {}),
+      scopeType: "WebPageNode",
+      scopeId: canvasRoot.id,
+      urlPath: canvasRoot.path,
     };
   }
 
   if (isDesignPageNode(canvasRoot)) {
     return {
-      pageType: "design page",
-      pageId: canvasRoot.id,
+      scopeType: "DesignPageNode",
+      scopeId: canvasRoot.id,
+      ...(canvasRoot.name ? { scopeName: canvasRoot.name } : {}),
+      urlPath: null,
+    };
+  }
+
+  if (isComponentNode(canvasRoot)) {
+    return {
+      scopeType: "ComponentNode",
+      scopeId: canvasRoot.id,
+      ...(canvasRoot.componentName
+        ? { scopeName: canvasRoot.componentName }
+        : {}),
+      urlPath: null,
     };
   }
 

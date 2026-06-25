@@ -1,17 +1,21 @@
-export type PageType = "web page" | "design page";
+export type ScopeType = "WebPageNode" | "DesignPageNode" | "ComponentNode";
 
-export interface PageInfo {
-  pageType: PageType;
-  pageId: string;
-  pagePath?: string;
+export interface ScopeInfo {
+  scopeType: ScopeType;
+  scopeId: string;
+  scopeName?: string;
+  urlPath: string | null;
 }
 
 export interface HistoryEntry {
   nodeId: string;
   nodeName: string;
-  pageType?: PageType;
-  pageId?: string;
-  pagePath?: string;
+  scopeType?: ScopeType;
+  scopeId?: string;
+  scopeName?: string;
+  urlPath?: string | null;
+  isReplica?: boolean;
+  originalNodeId?: string;
   timestamp: number;
 }
 
