@@ -24,17 +24,47 @@ export function HistoryPanel({
             <li
               className="history-item"
               key={`${entry.nodeId}-${entry.timestamp}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Copy ${entry.nodeName}`}
+              onClick={() => onCopyItem(entry)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onCopyItem(entry);
+                }
+              }}
             >
               <span className="history-name" title={entry.nodeId}>
                 {entry.nodeName}
               </span>
-              <button
-                className="copy-button"
-                onClick={() => onCopyItem(entry)}
-                aria-label={`Copy ${entry.nodeName}`}
+              <span
+                className={`history-copy-icon${
+                  justCopiedId === entry.nodeId
+                    ? " history-copy-icon--success"
+                    : ""
+                }`}
+                aria-hidden="true"
               >
-                {justCopiedId === entry.nodeId ? <CheckIcon /> : <CopyIcon />}
-              </button>
+                <span
+                  className={`history-icon-layer${
+                    justCopiedId === entry.nodeId
+                      ? ""
+                      : " history-icon-layer--visible"
+                  }`}
+                >
+                  <CopyIcon />
+                </span>
+                <span
+                  className={`history-icon-layer${
+                    justCopiedId === entry.nodeId
+                      ? " history-icon-layer--visible"
+                      : ""
+                  }`}
+                >
+                  <CheckIcon width={24} height={24} />
+                </span>
+              </span>
             </li>
           ))}
         </ul>

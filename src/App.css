@@ -14,8 +14,9 @@ main {
 
 .instructions p {
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.25;
   color: var(--framer-color-text-secondary, #666);
+  font-size: 12px;
 }
 
 .status {
@@ -24,7 +25,7 @@ main {
   height: 30px;
   padding: 0 6px;
   border-radius: 8px;
-  border: 1px dashed var(--framer-color-border, #e0e0e0);
+  border: 1px dashed var(--framer-color-text-tertiary, #e0e0e0);
   /* background: var(--framer-color-bg-secondary, #f5f5f5); */
 }
 
@@ -91,7 +92,7 @@ main {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .history-item {
@@ -102,6 +103,13 @@ main {
   padding: 0 8px 0 10px;
   border-radius: 8px;
   background: var(--framer-color-bg-secondary, #f5f5f5);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.history-item:hover,
+.history-item:focus-visible {
+  background: var(--framer-color-bg-tertiary, #e8e8e8);
 }
 
 .history-name {
@@ -110,21 +118,49 @@ main {
   white-space: nowrap;
 }
 
-.copy-button {
+.history-copy-icon {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  color: var(--framer-color-text-secondary, #666);
+}
+
+.history-copy-icon--success {
+  color: #22c55e;
+}
+
+.history-icon-layer {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--framer-color-text-secondary, #666);
-  cursor: pointer;
-  flex-shrink: 0;
+  opacity: 0;
+  transform: scale(0.65);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
 }
 
-.copy-button:hover {
-  background: var(--framer-color-bg-tertiary, #e8e8e8);
-  color: var(--framer-color-text, #333);
+.history-icon-layer--visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.history-copy-icon svg {
+  width: 10px;
+  height: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .history-icon-layer {
+    transition: none;
+    transform: none;
+  }
+
+  .history-icon-layer--visible {
+    transform: none;
+  }
 }

@@ -1,20 +1,21 @@
-import type { CanvasNode } from "@framer/plugin";
-import { getNodeName } from "../lib/node";
-import type { CopyState } from "../lib/types";
+import type { CopyState, HistoryEntry } from "../lib/types";
 import { CheckIcon } from "./icons/CheckIcon";
 
 interface SelectionStatusProps {
-  selection: CanvasNode[];
+  lastCopied: Pick<HistoryEntry, "nodeId" | "nodeName"> | null;
   copyState: CopyState;
 }
 
-export function SelectionStatus({ selection, copyState }: SelectionStatusProps) {
+export function SelectionStatus({
+  lastCopied,
+  copyState,
+}: SelectionStatusProps) {
   return (
     <div className="status">
-      {selection.length === 0 ? (
+      {lastCopied === null ? (
         <span className="status-empty">Nothing selected</span>
       ) : (
-        <span className="status-active" title={getNodeName(selection[0])}>
+        <span className="status-active" title={lastCopied.nodeName}>
           {copyState === "copied" && (
             <span className="status-check" aria-hidden="true">
               <CheckIcon />
@@ -22,7 +23,7 @@ export function SelectionStatus({ selection, copyState }: SelectionStatusProps) 
           )}
           <span className="status-label">
             {copyState === "copied" ? "Copied:" : "Ready:"}{" "}
-            {getNodeName(selection[0])}
+            {lastCopied.nodeName}
           </span>
         </span>
       )}

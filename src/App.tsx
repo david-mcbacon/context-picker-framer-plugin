@@ -8,9 +8,9 @@ import { useContextPicker } from "./hooks/useContextPicker";
 
 export function App() {
   const {
-    selection,
     history,
     copyState,
+    lastCopied,
     justCopiedId,
     clipboardFieldRef,
     handleCopyHistoryItem,
@@ -19,7 +19,7 @@ export function App() {
   return (
     <main>
       <Instructions />
-      <SelectionStatus selection={selection} copyState={copyState} />
+      <SelectionStatus lastCopied={lastCopied} copyState={copyState} />
       <ClipboardField fieldRef={clipboardFieldRef} />
       <HistoryPanel
         history={history}
