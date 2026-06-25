@@ -10,6 +10,7 @@ import { useSelection } from "./useSelection";
 export function useContextPicker() {
   const selection = useSelection();
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [justCopiedId, setJustCopiedId] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<CopyState>("empty");
   const [lastCopied, setLastCopied] = useState<Pick<
@@ -22,23 +23,30 @@ export function useContextPicker() {
 
   useEffect(() => {
     async function loadHistory() {
-      const stored = await framer.getPluginData(STORAGE_KEY);
-      if (stored) {
-        try {
-          setHistory(JSON.parse(stored));
-        } catch {
-          // ignore malformed stored data
+      try {
+        const stored = await framer.getPluginData(STORAGE_KEY);
+        if (stored) {
+          const storedHistory = JSON.parse(stored);
+          if (Array.isArray(storedHistory)) {
+            setHistory((current) =>
+              mergeHistory(storedHistory as HistoryEntry[], current),
+            );
+          }
         }
+      } catch {
+        // ignore malformed or unavailable stored data
+      } finally {
+        setHasLoadedHistory(true);
       }
     }
     loadHistory();
   }, []);
 
   useEffect(() => {
-    if (isAllowedtoSetPluginData) {
+    if (hasLoadedHistory && isAllowedtoSetPluginData) {
       framer.setPluginData(STORAGE_KEY, JSON.stringify(history));
     }
-  }, [history, isAllowedtoSetPluginData]);
+  }, [history, hasLoadedHistory, isAllowedtoSetPluginData]);
 
   useEffect(() => {
     if (lastCopied === null) return;
@@ -85,14 +93,7 @@ export function useContextPicker() {
     }));
 
     setHistory((prev) => {
-      const merged = [...entries.reverse(), ...prev];
-      const seen = new Set<string>();
-      const deduped = merged.filter((entry) => {
-        if (seen.has(entry.nodeId)) return false;
-        seen.add(entry.nodeId);
-        return true;
-      });
-      return deduped.slice(0, MAX_HISTORY);
+      return mergeHistory(entries.reverse(), prev);
     });
   }, [selection]);
 
@@ -116,4 +117,20 @@ export function useContextPicker() {
     clipboardFieldRef,
     handleCopyHistoryItem,
   };
+}
+
+function mergeHistory(
+  primary: HistoryEntry[],
+  secondary: HistoryEntry[],
+): HistoryEntry[] {
+  const seen = new Set<string>();
+
+  return [...primary, ...secondary]
+    .filter((entry) => {
+      if (typeof entry?.nodeId !== "string") return false;
+      if (seen.has(entry.nodeId)) return false;
+      seen.add(entry.nodeId);
+      return true;
+    })
+    .slice(0, MAX_HISTORY);
 }
