@@ -3,12 +3,11 @@ import {
   isComponentNode,
   isDesignPageNode,
   isWebPageNode,
-  useIsAllowedTo,
 } from "@framer/plugin";
 import { useEffect, useRef, useState } from "react";
 import { copyTextToClipboard } from "../lib/clipboard";
 import { MAX_HISTORY, STATUS_CLEAR_MS, STORAGE_KEY } from "../lib/constants";
-import { getNodeName } from "../lib/node";
+import { getNodeName, truncateNodeName } from "../lib/node";
 import { formatSelectionAsJSON } from "../lib/selection";
 import type { CopyState, HistoryEntry, ScopeInfo } from "../lib/types";
 import { useCanvasRoot } from "./useCanvasRoot";
@@ -34,34 +33,29 @@ export function useContextPicker() {
   > | null>(null);
   const lastSelectionKeyRef = useRef("");
   const clipboardFieldRef = useRef<HTMLTextAreaElement>(null);
-  const isAllowedtoSetPluginData = useIsAllowedTo("setPluginData");
+  const didNotifyStorageSaveErrorRef = useRef(false);
 
   useEffect(() => {
-    async function loadHistory() {
-      try {
-        const stored = await framer.getPluginData(STORAGE_KEY);
-        if (stored) {
-          const storedHistory = JSON.parse(stored);
-          if (Array.isArray(storedHistory)) {
-            setHistory((current) =>
-              mergeHistory(storedHistory as HistoryEntry[], current),
-            );
-          }
-        }
-      } catch {
-        // ignore malformed or unavailable stored data
-      } finally {
-        setHasLoadedHistory(true);
-      }
+    const storedHistory = loadHistoryFromLocalStorage();
+    if (storedHistory) {
+      setHistory((current) => mergeHistory(storedHistory, current));
     }
-    loadHistory();
+    setHasLoadedHistory(true);
   }, []);
 
   useEffect(() => {
-    if (hasLoadedHistory && isAllowedtoSetPluginData) {
-      framer.setPluginData(STORAGE_KEY, JSON.stringify(history));
+    if (!hasLoadedHistory) return;
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+      didNotifyStorageSaveErrorRef.current = false;
+    } catch {
+      if (!didNotifyStorageSaveErrorRef.current) {
+        notifyStorageError("Recent selections could not be saved.");
+        didNotifyStorageSaveErrorRef.current = true;
+      }
     }
-  }, [history, hasLoadedHistory, isAllowedtoSetPluginData]);
+  }, [history, hasLoadedHistory]);
 
   useEffect(() => {
     if (lastCopied === null) return;
@@ -104,11 +98,15 @@ export function useContextPicker() {
     setCopyState("ready");
 
     requestAnimationFrame(() => {
-      void copyTextToClipboard(json, clipboardFieldRef.current).then(
-        (didCopy) => {
+      void copyTextToClipboard(json, clipboardFieldRef.current)
+        .then((didCopy) => {
           setCopyState(didCopy ? "copied" : "ready");
-        },
-      );
+          if (!didCopy) notifyClipboardError();
+        })
+        .catch(() => {
+          setCopyState("ready");
+          notifyClipboardError();
+        });
     });
 
     const entries: HistoryEntry[] = selection.map((node) => ({
@@ -138,7 +136,12 @@ export function useContextPicker() {
         ? { originalNodeId: entry.originalNodeId }
         : {}),
     });
-    const didCopy = await copyTextToClipboard(json, clipboardFieldRef.current);
+    let didCopy = false;
+    try {
+      didCopy = await copyTextToClipboard(json, clipboardFieldRef.current);
+    } catch {
+      didCopy = false;
+    }
     setLastCopied({
       nodeId: entry.nodeId,
       nodeName: entry.nodeName,
@@ -150,6 +153,7 @@ export function useContextPicker() {
       originalNodeId: entry.originalNodeId,
     });
     setCopyState(didCopy ? "copied" : "ready");
+    if (!didCopy) notifyClipboardError();
     setJustCopiedId(entry.nodeId);
     setTimeout(() => setJustCopiedId(null), 1200);
   }
@@ -209,9 +213,38 @@ function mergeHistory(
   return [...primary, ...secondary]
     .filter((entry) => {
       if (typeof entry?.nodeId !== "string") return false;
+      entry.nodeName =
+        typeof entry.nodeName === "string"
+          ? truncateNodeName(entry.nodeName)
+          : "Unknown";
       if (seen.has(entry.nodeId)) return false;
       seen.add(entry.nodeId);
       return true;
     })
     .slice(0, MAX_HISTORY);
+}
+
+function loadHistoryFromLocalStorage(): HistoryEntry[] | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
+
+    const storedHistory = JSON.parse(stored);
+    if (!Array.isArray(storedHistory)) return null;
+
+    return storedHistory as HistoryEntry[];
+  } catch {
+    notifyStorageError("Recent selections could not be loaded.");
+    return null;
+  }
+}
+
+function notifyStorageError(message: string) {
+  framer.notify(message, { variant: "warning" });
+}
+
+function notifyClipboardError() {
+  framer.notify("Selection copied into the text field. Copy it manually.", {
+    variant: "warning",
+  });
 }
