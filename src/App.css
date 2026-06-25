@@ -33,6 +33,19 @@ main {
   color: var(--framer-color-text-tertiary, #999);
 }
 
+.status-content {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.06s ease,
+    transform 0.06s ease;
+}
+
+.status-content--changing {
+  opacity: 0;
+  transform: translateY(2px);
+}
+
 .status-active {
   display: flex;
   align-items: center;
@@ -155,6 +168,15 @@ main {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .status-content {
+    transition: none;
+    transform: none;
+  }
+
+  .status-content--changing {
+    transform: none;
+  }
+
   .history-icon-layer {
     transition: none;
     transform: none;
