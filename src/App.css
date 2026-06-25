@@ -20,7 +20,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 4px 0 10px;
+  padding: 4px 0 6px;
   background: var(--framer-color-bg, #fff);
   color: var(--framer-color-text-tertiary, #999);
   font-size: 9px;
