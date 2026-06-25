@@ -1,6 +1,7 @@
 import "./App.css";
 import "./plugin/setup";
 import { ClipboardField } from "./components/ClipboardField";
+import { Footer } from "./components/Footer";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { Instructions } from "./components/Instructions";
 import { SelectionStatus } from "./components/SelectionStatus";
@@ -26,6 +27,7 @@ export function App() {
         justCopiedId={justCopiedId}
         onCopyItem={handleCopyHistoryItem}
       />
+      <Footer />
     </main>
   );
 }

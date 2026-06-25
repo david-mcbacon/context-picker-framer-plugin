@@ -5,18 +5,65 @@ main {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 15px 15px 15px;
+  padding: 0 15px 54px 15px;
   font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
   font-size: 12px;
   color: var(--framer-color-text, #333);
   
 }
 
+.footer {
+  position: fixed;
+  right: 15px;
+  bottom: 0;
+  left: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0 10px;
+  background: var(--framer-color-bg, #fff);
+  color: var(--framer-color-text-tertiary, #999);
+  font-size: 9px;
+  line-height: 1.35;
+  text-align: center;
+  z-index: 1;
+}
+
+.footer::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0),
+    var(--framer-color-bg, #fff)
+  );
+  pointer-events: none;
+}
+
+.footer span {
+  overflow-wrap: anywhere;
+  padding: 0 10px;
+  text-wrap: balance;
+}
+
+.footer a {
+  color: #FA4624;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
 .instructions p {
   margin: 0;
   line-height: 1.5;
   color: var(--framer-color-text-secondary, #666);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .status {
@@ -26,7 +73,7 @@ main {
   padding: 0 6px;
   border-radius: 8px;
   border: 1px dashed var(--framer-color-text-tertiary, #e0e0e0);
-  /* background: var(--framer-color-bg-secondary, #f5f5f5); */
+  font-size: 11px;
 }
 
 .status-empty {
@@ -129,6 +176,7 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 11px;
 }
 
 .history-copy-icon {
