@@ -187,8 +187,15 @@ export function App() {
           <span className="status-empty">Nothing selected</span>
         ) : (
           <span className="status-active" title={getNodeName(selection[0])}>
-            {copyState === "copied" ? "Copied:" : "Ready:"}{" "}
-            {getNodeName(selection[0])}
+            {copyState === "copied" && (
+              <span className="status-check" aria-hidden="true">
+                <CheckIcon />
+              </span>
+            )}
+            <span className="status-label">
+              {copyState === "copied" ? "Copied:" : "Ready:"}{" "}
+              {getNodeName(selection[0])}
+            </span>
           </span>
         )}
       </div>

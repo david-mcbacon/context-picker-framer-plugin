@@ -32,13 +32,26 @@ main {
 }
 
 .status-active {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: var(--framer-color-text, #333);
   font-weight: 600;
+  min-width: 0;
+  flex: 1;
+}
+
+.status-check {
+  display: flex;
+  flex-shrink: 0;
+  color: #22c55e;
+}
+
+.status-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
-  flex: 1;
 }
 
 .clipboard-field {
