@@ -1,5 +1,7 @@
 # Context Picker for Framer
 
+![Context Picker for Framer Banner](https://offload-assets.framercoder.com/8f8f69d5-5895-47be-8b54-a54389f0583a/d478f7cc-ff40-470a-96db-b7db10dfce32_Cotext%20Picker%20Hover%20Main.webp?width=1600&height=1200)
+
 Context Picker is a small Framer plugin that copies the currently selected
 canvas layer context to your clipboard.
 
